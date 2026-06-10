@@ -1,0 +1,57 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">Rule</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Device</th><td>{{ object.device|linkify }}</td></tr>
+        <tr><th scope="row">Sequence</th><td>{{ object.sequence }}</td></tr>
+        <tr><th scope="row">Action</th><td>{% badge object.get_action_display bg_color=object.get_action_color %}</td></tr>
+        <tr><th scope="row">Disabled</th><td>{% checkmark object.disabled %}</td></tr>
+        <tr><th scope="row">Quick</th><td>{% checkmark object.quick %}</td></tr>
+        <tr><th scope="row">Interface</th><td>{{ object.interface|placeholder }}{% if object.floating %} <span class="badge text-bg-grey">floating</span>{% endif %}</td></tr>
+        <tr><th scope="row">Direction</th><td>{{ object.get_direction_display }}</td></tr>
+        <tr><th scope="row">IP protocol</th><td>{{ object.get_ipprotocol_display }}</td></tr>
+        <tr><th scope="row">Protocol</th><td>{{ object.protocol|placeholder }}</td></tr>
+        <tr><th scope="row">Description</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header">Source &amp; Destination</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Source</th><td>{% if object.source_invert %}<strong>!</strong> {% endif %}{{ object.get_source_type_display }}{% if object.source %}: {{ object.source }}{% endif %}{% if object.source_alias %}: {{ object.source_alias|linkify }}{% endif %}{% if object.source_port %} :{{ object.source_port }}{% endif %}</td></tr>
+        <tr><th scope="row">Destination</th><td>{% if object.destination_invert %}<strong>!</strong> {% endif %}{{ object.get_destination_type_display }}{% if object.destination %}: {{ object.destination }}{% endif %}{% if object.destination_alias %}: {{ object.destination_alias|linkify }}{% endif %}{% if object.destination_port %} :{{ object.destination_port }}{% endif %}</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">Advanced (pf)</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Gateway</th><td>{{ object.gateway|placeholder }}</td></tr>
+        <tr><th scope="row">Log</th><td>{% checkmark object.log %}</td></tr>
+        <tr><th scope="row">State type</th><td>{{ object.statetype|placeholder }}</td></tr>
+        <tr><th scope="row">Schedule</th><td>{{ object.sched|placeholder }}</td></tr>
+        <tr><th scope="row">TCP flags</th><td>{{ object.tcpflags|placeholder }}</td></tr>
+        <tr><th scope="row">ICMP type</th><td>{{ object.icmptype|placeholder }}</td></tr>
+        <tr><th scope="row">Reply-to</th><td>{{ object.reply_to|placeholder }}</td></tr>
+        <tr><th scope="row">Tag / Tagged</th><td>{{ object.tag|placeholder }} / {{ object.tagged|placeholder }}</td></tr>
+        <tr><th scope="row">OS</th><td>{{ object.os|placeholder }}</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header">Platform identity</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Tracker (pfSense)</th><td>{{ object.tracker|placeholder }}</td></tr>
+        <tr><th scope="row">UUID (OPNsense)</th><td>{{ object.uuid|placeholder }}</td></tr>
+        <tr><th scope="row">Associated rule</th><td>{{ object.associated_rule_id|placeholder }}</td></tr>
+        <tr><th scope="row">Advanced</th><td>{% if object.advanced %}<pre class="mb-0">{{ object.advanced|pprint }}</pre>{% else %}{{ ''|placeholder }}{% endif %}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+</div>
+{% endblock %}

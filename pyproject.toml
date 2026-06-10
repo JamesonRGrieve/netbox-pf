@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netbox-pf"
+version = "0.1.0"
+description = "Native NetBox source of truth for pf/OPNsense firewall rules and aliases"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "AGPL-3.0-or-later"
+authors = [{ name = "Jameson" }]
+keywords = ["netbox", "netbox-plugin", "pf", "opnsense", "pfsense", "firewall"]
+classifiers = [
+    "Framework :: Django",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+]
+
+[project.urls]
+Repository = "https://github.com/SelfHostMyApp/netbox-pf"
+
+[tool.setuptools.packages.find]
+include = ["netbox_pf*"]
+
+[tool.black]
+line-length = 100
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "netbox.settings"
+python_files = ["test_*.py"]
+addopts = "-v"

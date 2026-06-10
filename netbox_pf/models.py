@@ -1,0 +1,130 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Native pf/OPNsense firewall model. Each pf field is a real column → zero-loss SoT."""
+from django.core.validators import MinValueValidator
+from django.db import models
+from django.urls import reverse
+from netbox.models import NetBoxModel
+from .choices import (
+    AliasTypeChoices, DirectionChoices, EndpointTypeChoices,
+    FirewallActionChoices, IPProtocolChoices,
+)
+
+
+class Alias(NetBoxModel):
+    """A pf alias: a named, typed group of hosts/networks/ports/urls referenced by rules.
+
+    Covers both OPNsense and pfSense alias dialects; the long-tail (proto, dynamic
+    interface, categories, …) lives in ``advanced`` for zero-loss round-trip.
+    """
+    name = models.CharField(max_length=128, unique=True)
+    type = models.CharField(max_length=16, choices=AliasTypeChoices)
+    content = models.TextField(
+        blank=True,
+        help_text="Members, one per line or comma-separated; may name other aliases (nesting).",
+    )
+    detail = models.TextField(blank=True, help_text="Per-member descriptions (pfSense), aligned to content.")
+    description = models.CharField(max_length=200, blank=True)
+    advanced = models.JSONField(default=dict, blank=True, help_text="Lossless catch-all (proto, interface, categories, …).")
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Firewall Alias"
+        verbose_name_plural = "Firewall Aliases"
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse("plugins:netbox_pf:alias", args=[self.pk])
+
+
+class FirewallRule(NetBoxModel):
+    """A single pf rule on a device — the full ``<filter><rule>`` shape, lossless.
+
+    Platform-agnostic across **OPNsense and pfSense** (both FreeBSD pf): the common
+    fields are explicit columns; platform-specific identifiers (pfSense ``tracker``,
+    OPNsense MVC ``uuid``) and the long-tail pf options live in ``advanced`` (JSON), so
+    either platform's config round-trips with zero loss. The device's ``platform`` says
+    which dialect it came from.
+    """
+    device = models.ForeignKey(
+        "dcim.Device", on_delete=models.CASCADE, related_name="pf_firewall_rules"
+    )
+    sequence = models.PositiveIntegerField(
+        validators=[MinValueValidator(0)], help_text="Evaluation order within the device."
+    )
+    action = models.CharField(max_length=8, choices=FirewallActionChoices)
+    disabled = models.BooleanField(default=False)
+    quick = models.BooleanField(default=True, help_text="pf first-match-wins for this rule.")
+
+    # Binding
+    interface = models.CharField(
+        max_length=512, blank=True, help_text="pf interface(s), comma-separated (raw)."
+    )
+    floating = models.BooleanField(default=False)
+    direction = models.CharField(max_length=4, choices=DirectionChoices, default=DirectionChoices.IN)
+    ipprotocol = models.CharField(
+        max_length=8, choices=IPProtocolChoices, default=IPProtocolChoices.INET
+    )
+    protocol = models.CharField(
+        max_length=32, blank=True, help_text="tcp/udp/tcp-udp/icmp/esp/…; blank = any."
+    )
+
+    # Source (polymorphic pf endpoint)
+    source_type = models.CharField(
+        max_length=16, choices=EndpointTypeChoices, default=EndpointTypeChoices.ANY
+    )
+    source = models.CharField(max_length=255, blank=True, help_text="CIDR/host/interface value.")
+    source_alias = models.ForeignKey(
+        Alias, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
+    )
+    source_invert = models.BooleanField(default=False)
+    source_port = models.CharField(max_length=128, blank=True)
+
+    # Destination (polymorphic pf endpoint)
+    destination_type = models.CharField(
+        max_length=16, choices=EndpointTypeChoices, default=EndpointTypeChoices.ANY
+    )
+    destination = models.CharField(max_length=255, blank=True)
+    destination_alias = models.ForeignKey(
+        Alias, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
+    )
+    destination_invert = models.BooleanField(default=False)
+    destination_port = models.CharField(max_length=128, blank=True)
+
+    # pf-specific advanced fields (the "holes" no foreign ACL model has)
+    gateway = models.CharField(max_length=128, blank=True, help_text="Policy-route gateway.")
+    log = models.BooleanField(default=False)
+    statetype = models.CharField(max_length=32, blank=True)
+    sched = models.CharField(max_length=128, blank=True)
+    tcpflags = models.CharField(max_length=64, blank=True)
+    icmptype = models.CharField(max_length=255, blank=True)
+    reply_to = models.CharField(max_length=128, blank=True)
+    tag = models.CharField(max_length=128, blank=True, help_text="Tag to set on matching packets.")
+    tagged = models.CharField(max_length=128, blank=True, help_text="Match packets already carrying this tag.")
+    os = models.CharField(max_length=64, blank=True, help_text="OS fingerprint match.")
+    description = models.CharField(max_length=255, blank=True)
+
+    # Platform-specific rule identity (kept verbatim for round-trip)
+    tracker = models.CharField(max_length=64, blank=True, help_text="pfSense rule tracker ID.")
+    uuid = models.CharField(max_length=64, blank=True, help_text="OPNsense MVC rule UUID.")
+    associated_rule_id = models.CharField(max_length=64, blank=True, help_text="Linked NAT/assoc rule id.")
+    advanced = models.JSONField(
+        default=dict, blank=True,
+        help_text="Lossless catch-all for long-tail pf options (max-states, statetimeout, "
+                  "tcpflags1/2, sloppy/no-sync state, prio/set-prio, shaper/dnpipe, …).",
+    )
+
+    class Meta:
+        ordering = ["device", "sequence"]
+        unique_together = [["device", "sequence"]]
+        verbose_name = "Firewall Rule"
+
+    def __str__(self):
+        return f"{self.device}: {self.sequence:04d} {self.action}"
+
+    def get_absolute_url(self):
+        return reverse("plugins:netbox_pf:firewallrule", args=[self.pk])
+
+    def get_action_color(self):
+        return FirewallActionChoices.colors.get(self.action)
