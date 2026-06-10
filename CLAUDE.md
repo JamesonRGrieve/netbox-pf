@@ -19,8 +19,9 @@ module's `firewall_rules` contract reads it back to reconcile the live boxes.
 ### DO, ALWAYS:
 - If functionality won't work without a parameter, make it a **required positional**
   parameter — never an optional one with an inline presence check.
-- Any time you modify a source file, ensure its accompanying test under `tests/`
-  contains **comprehensive tests for the change WITHOUT MOCKS**, and update any `.md`
+- Any time you modify a source file, ensure its accompanying test under
+  `netbox_pf/tests/` contains **comprehensive tests for the change WITHOUT MOCKS**,
+  so `manage.py test netbox_pf` discovers them, and update any `.md`
   in the same directory that references the changed code.
 - Write concise code (avoid obvious comments; use one-liners where possible).
 - Critically analyze requirements and ask all necessary clarifying questions before
@@ -84,8 +85,9 @@ module's `firewall_rules` contract reads it back to reconcile the live boxes.
 
 ## Testing (NO MOCKS — real DB, NetBox test framework)
 
-- Tests live in `tests/`, one module per source module (`tests/test_models.py`,
-  `tests/test_api.py`, `tests/test_filtersets.py`, `tests/test_roundtrip.py`, …).
+- Tests live in `netbox_pf/tests/` (inside the package, so `manage.py test netbox_pf`
+  discovers them and they ship with the plugin), one module per source module
+  (`test_models.py`, `test_api.py`, `test_filtersets.py`, `test_roundtrip.py`, …).
 - Use NetBox's base classes from `utilities.testing`: `ModelViewTestCase` /
   `ViewTestCases`, `APIViewTestCases.APIViewTestCase`, `ChangeLoggedFilterSetTests`.
   They exercise models, API, and filters against a **real test database** — no mocks.

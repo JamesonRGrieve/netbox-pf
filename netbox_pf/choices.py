@@ -41,16 +41,22 @@ class EndpointTypeChoices(ChoiceSet):
 
 
 class AliasTypeChoices(ChoiceSet):
+    """OPNsense/pfSense alias dialects (config.xml ``<aliases><alias><type>`` tokens)."""
     HOST = "host"
     NETWORK = "network"
+    NETWORKGROUP = "networkgroup"
     PORT = "port"
     URL = "url"
-    URLJSON = "urljson"
+    URLTABLE = "urltable"
     GEOIP = "geoip"
     MAC = "mac"
+    ASN = "asn"
+    DYNIPV6HOST = "dynipv6host"
     EXTERNAL = "external"
+    INTERNAL = "internal"
     CHOICES = [
-        (HOST, "Host(s)"), (NETWORK, "Network(s)"), (PORT, "Port(s)"),
-        (URL, "URL table"), (URLJSON, "URL table (JSON)"), (GEOIP, "GeoIP"),
-        (MAC, "MAC"), (EXTERNAL, "External"),
+        (HOST, "Host(s)"), (NETWORK, "Network(s)"), (NETWORKGROUP, "Network group"),
+        (PORT, "Port(s)"), (URL, "URL (download once)"), (URLTABLE, "URL table"),
+        (GEOIP, "GeoIP"), (MAC, "MAC"), (ASN, "BGP ASN"),
+        (DYNIPV6HOST, "Dynamic IPv6 host"), (EXTERNAL, "External"), (INTERNAL, "Internal"),
     ]
