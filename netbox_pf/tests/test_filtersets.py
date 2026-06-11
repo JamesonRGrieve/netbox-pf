@@ -32,6 +32,7 @@ class FirewallRuleFilterSetTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.device = create_test_device("fw1")
+        cls.device2 = create_test_device("fw2")
         FirewallRule.objects.bulk_create([
             FirewallRule(device=cls.device, sequence=0, action=FirewallActionChoices.PASS,
                          source_type=EndpointTypeChoices.ANY, destination_type=EndpointTypeChoices.SELF,
@@ -42,19 +43,24 @@ class FirewallRuleFilterSetTest(TestCase):
             FirewallRule(device=cls.device, sequence=2, action=FirewallActionChoices.PASS,
                          source_type=EndpointTypeChoices.NETWORK, source="10.0.0.0/8",
                          destination_type=EndpointTypeChoices.ANY, interface="lan"),
+            # a second device proves the filter actually scopes (the original bug returned ALL)
+            FirewallRule(device=cls.device2, sequence=0, action=FirewallActionChoices.PASS,
+                         source_type=EndpointTypeChoices.ANY, destination_type=EndpointTypeChoices.ANY,
+                         description="other device rule"),
         ])
 
     def test_action(self):
         self.assertEqual(FirewallRuleFilterSet({"action": [FirewallActionChoices.PASS]}, self.queryset).qs.count(), 2)
 
     def test_device_id(self):
-        # the bug: ?device_id was ignored and returned ALL rules; this asserts it filters
+        # the bug: ?device_id was ignored and returned ALL rules (here 4); these prove it scopes
+        self.assertEqual(self.queryset.count(), 4)
         self.assertEqual(FirewallRuleFilterSet({"device_id": [self.device.pk]}, self.queryset).qs.count(), 3)
-        self.assertEqual(FirewallRuleFilterSet({"device_id": [self.device.pk + 9999]}, self.queryset).qs.count(), 0)
+        self.assertEqual(FirewallRuleFilterSet({"device_id": [self.device2.pk]}, self.queryset).qs.count(), 1)
 
     def test_device_name(self):
         self.assertEqual(FirewallRuleFilterSet({"device": [self.device.name]}, self.queryset).qs.count(), 3)
-        self.assertEqual(FirewallRuleFilterSet({"device": ["nonexistent-device"]}, self.queryset).qs.count(), 0)
+        self.assertEqual(FirewallRuleFilterSet({"device": [self.device2.name]}, self.queryset).qs.count(), 1)
 
     def test_log_and_source_type(self):
         self.assertEqual(FirewallRuleFilterSet({"log": True}, self.queryset).qs.count(), 1)
