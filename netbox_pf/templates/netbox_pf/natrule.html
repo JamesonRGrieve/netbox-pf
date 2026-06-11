@@ -1,0 +1,54 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">Rule</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Device</th><td>{{ object.device|linkify }}</td></tr>
+        <tr><th scope="row">NAT type</th><td>{% badge object.get_nat_type_display bg_color=object.get_nat_type_color %}</td></tr>
+        <tr><th scope="row">Sequence</th><td>{{ object.sequence }}</td></tr>
+        <tr><th scope="row">Disabled</th><td>{% checkmark object.disabled %}</td></tr>
+        <tr><th scope="row">Interface</th><td>{{ object.interface|placeholder }}</td></tr>
+        <tr><th scope="row">IP protocol</th><td>{{ object.ipprotocol|placeholder }}</td></tr>
+        <tr><th scope="row">Protocol</th><td>{{ object.protocol|placeholder }}</td></tr>
+        <tr><th scope="row">Description</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header">Match (original)</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Source</th><td>{{ object.source|placeholder }}{% if object.source_port %} :{{ object.source_port }}{% endif %}</td></tr>
+        <tr><th scope="row">Destination</th><td>{{ object.destination|placeholder }}{% if object.destination_port %} :{{ object.destination_port }}{% endif %}</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">Translation</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Target</th><td>{{ object.target|placeholder }}</td></tr>
+        <tr><th scope="row">Redirect port</th><td>{{ object.local_port|placeholder }}</td></tr>
+        <tr><th scope="row">Target subnet</th><td>{{ object.target_subnet|placeholder }}</td></tr>
+        <tr><th scope="row">External (1:1)</th><td>{{ object.external|placeholder }}</td></tr>
+        <tr><th scope="row">NAT port</th><td>{{ object.nat_port|placeholder }} {% if object.static_nat_port %}<span class="badge text-bg-grey">static</span>{% endif %}</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header">Options</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">No-NAT</th><td>{% checkmark object.nonat %}</td></tr>
+        <tr><th scope="row">No redirect</th><td>{% checkmark object.nordr %}</td></tr>
+        <tr><th scope="row">No sync</th><td>{% checkmark object.nosync %}</td></tr>
+        <tr><th scope="row">NAT reflection</th><td>{{ object.natreflection|placeholder }}</td></tr>
+        <tr><th scope="row">Pool option</th><td>{{ object.poolopts|placeholder }}</td></tr>
+        <tr><th scope="row">Associated rule</th><td>{{ object.associated_rule_id|placeholder }}</td></tr>
+        <tr><th scope="row">Advanced</th><td>{% if object.advanced %}<pre class="mb-0">{{ object.advanced|pprint }}</pre>{% else %}{{ ''|placeholder }}{% endif %}</td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+</div>
+{% endblock %}

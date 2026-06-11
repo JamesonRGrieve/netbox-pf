@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from netbox.api.viewsets import NetBoxModelViewSet
 from .. import filtersets
-from ..models import Alias, FirewallRule
-from .serializers import AliasSerializer, FirewallRuleSerializer
+from ..models import Alias, FirewallRule, NATRule
+from .serializers import AliasSerializer, FirewallRuleSerializer, NATRuleSerializer
 
 
 class AliasViewSet(NetBoxModelViewSet):
@@ -17,3 +17,9 @@ class FirewallRuleViewSet(NetBoxModelViewSet):
     )
     serializer_class = FirewallRuleSerializer
     filterset_class = filtersets.FirewallRuleFilterSet
+
+
+class NATRuleViewSet(NetBoxModelViewSet):
+    queryset = NATRule.objects.prefetch_related("device", "tags")
+    serializer_class = NATRuleSerializer
+    filterset_class = filtersets.NATRuleFilterSet

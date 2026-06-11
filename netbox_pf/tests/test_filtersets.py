@@ -2,9 +2,11 @@
 """FilterSet tests against a real DB (no mocks)."""
 from django.test import TestCase
 from utilities.testing import create_test_device
-from netbox_pf.choices import AliasTypeChoices, EndpointTypeChoices, FirewallActionChoices
-from netbox_pf.filtersets import AliasFilterSet, FirewallRuleFilterSet
-from netbox_pf.models import Alias, FirewallRule
+from netbox_pf.choices import (
+    AliasTypeChoices, EndpointTypeChoices, FirewallActionChoices, NATTypeChoices,
+)
+from netbox_pf.filtersets import AliasFilterSet, FirewallRuleFilterSet, NATRuleFilterSet
+from netbox_pf.models import Alias, FirewallRule, NATRule
 
 
 class AliasFilterSetTest(TestCase):
@@ -69,3 +71,24 @@ class FirewallRuleFilterSetTest(TestCase):
     def test_search(self):
         self.assertEqual(FirewallRuleFilterSet({"q": "default block"}, self.queryset).qs.count(), 1)
         self.assertEqual(FirewallRuleFilterSet({"q": "lan"}, self.queryset).qs.count(), 1)
+
+
+class NATRuleFilterSetTest(TestCase):
+    queryset = NATRule.objects.all()
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.d1 = create_test_device("nat1")
+        cls.d2 = create_test_device("nat2")
+        NATRule.objects.bulk_create([
+            NATRule(device=cls.d1, nat_type=NATTypeChoices.PORT_FORWARD, sequence=0, target="192.0.2.10"),
+            NATRule(device=cls.d1, nat_type=NATTypeChoices.OUTBOUND, sequence=0, source="10.0.0.0/8"),
+            NATRule(device=cls.d2, nat_type=NATTypeChoices.PORT_FORWARD, sequence=0, target="192.0.2.20"),
+        ])
+
+    def test_device_id(self):
+        self.assertEqual(NATRuleFilterSet({"device_id": [self.d1.pk]}, self.queryset).qs.count(), 2)
+        self.assertEqual(NATRuleFilterSet({"device_id": [self.d2.pk]}, self.queryset).qs.count(), 1)
+
+    def test_nat_type(self):
+        self.assertEqual(NATRuleFilterSet({"nat_type": [NATTypeChoices.PORT_FORWARD]}, self.queryset).qs.count(), 2)

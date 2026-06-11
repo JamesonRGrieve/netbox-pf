@@ -6,8 +6,10 @@ from utilities.forms.fields import (
     DynamicModelChoiceField, DynamicModelMultipleChoiceField, TagFilterField,
 )
 from utilities.forms.rendering import FieldSet
-from .choices import AliasTypeChoices, DirectionChoices, FirewallActionChoices, IPProtocolChoices
-from .models import Alias, FirewallRule
+from .choices import (
+    AliasTypeChoices, DirectionChoices, FirewallActionChoices, IPProtocolChoices, NATTypeChoices,
+)
+from .models import Alias, FirewallRule, NATRule
 
 
 class AliasForm(NetBoxModelForm):
@@ -44,10 +46,41 @@ class FirewallRuleForm(NetBoxModelForm):
         ]
 
 
+class NATRuleForm(NetBoxModelForm):
+    device = DynamicModelChoiceField(queryset=Device.objects.all())
+
+    fieldsets = (
+        FieldSet("device", "nat_type", "sequence", "disabled", "interface", name="Rule"),
+        FieldSet("ipprotocol", "protocol", "source", "source_port", "destination", "destination_port", name="Match"),
+        FieldSet("target", "local_port", "target_subnet", "external", "nat_port", name="Translation"),
+        FieldSet("static_nat_port", "nonat", "nordr", "nosync", "natreflection", "poolopts",
+                 "associated_rule_id", "advanced", name="Options"),
+        FieldSet("description", "tags", name="Misc"),
+    )
+
+    class Meta:
+        model = NATRule
+        fields = [
+            "device", "nat_type", "sequence", "disabled", "interface", "ipprotocol",
+            "protocol", "source", "source_port", "destination", "destination_port",
+            "target", "local_port", "target_subnet", "external", "nat_port",
+            "static_nat_port", "nonat", "nordr", "nosync", "natreflection", "poolopts",
+            "associated_rule_id", "advanced", "description", "tags",
+        ]
+
+
 class AliasFilterForm(NetBoxModelFilterSetForm):
     model = Alias
     type = forms.MultipleChoiceField(choices=AliasTypeChoices, required=False)
     tag = TagFilterField(Alias)
+
+
+class NATRuleFilterForm(NetBoxModelFilterSetForm):
+    model = NATRule
+    device_id = DynamicModelMultipleChoiceField(queryset=Device.objects.all(), required=False, label="Device")
+    nat_type = forms.MultipleChoiceField(choices=NATTypeChoices, required=False)
+    disabled = forms.NullBooleanField(required=False)
+    tag = TagFilterField(NATRule)
 
 
 class FirewallRuleFilterForm(NetBoxModelFilterSetForm):

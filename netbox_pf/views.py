@@ -51,3 +51,28 @@ class FirewallRuleDeleteView(generic.ObjectDeleteView):
 class FirewallRuleBulkDeleteView(generic.BulkDeleteView):
     queryset = models.FirewallRule.objects.all()
     table = tables.FirewallRuleTable
+
+
+class NATRuleView(generic.ObjectView):
+    queryset = models.NATRule.objects.all()
+
+
+class NATRuleListView(generic.ObjectListView):
+    queryset = models.NATRule.objects.all()
+    table = tables.NATRuleTable
+    filterset = filtersets.NATRuleFilterSet
+    filterset_form = forms.NATRuleFilterForm
+
+
+class NATRuleEditView(generic.ObjectEditView):
+    queryset = models.NATRule.objects.all()
+    form = forms.NATRuleForm
+
+
+class NATRuleDeleteView(generic.ObjectDeleteView):
+    queryset = models.NATRule.objects.all()
+
+
+class NATRuleBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.NATRule.objects.all()
+    table = tables.NATRuleTable

@@ -3,7 +3,7 @@ import django_filters
 from dcim.models import Device
 from django.db.models import Q
 from netbox.filtersets import NetBoxModelFilterSet
-from .models import Alias, FirewallRule
+from .models import Alias, FirewallRule, NATRule
 
 
 class AliasFilterSet(NetBoxModelFilterSet):
@@ -49,4 +49,28 @@ class FirewallRuleFilterSet(NetBoxModelFilterSet):
             Q(description__icontains=value) | Q(interface__icontains=value)
             | Q(source__icontains=value) | Q(destination__icontains=value)
             | Q(gateway__icontains=value)
+        )
+
+
+class NATRuleFilterSet(NetBoxModelFilterSet):
+    device_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="device", queryset=Device.objects.all(), label="Device (ID)",
+    )
+    device = django_filters.ModelMultipleChoiceFilter(
+        field_name="device__name", to_field_name="name", queryset=Device.objects.all(),
+        label="Device (name)",
+    )
+
+    class Meta:
+        model = NATRule
+        fields = [
+            "id", "nat_type", "sequence", "disabled", "interface", "ipprotocol",
+            "protocol", "source", "destination", "target", "description",
+        ]
+
+    def search(self, queryset, name, value):
+        return queryset.filter(
+            Q(description__icontains=value) | Q(interface__icontains=value)
+            | Q(source__icontains=value) | Q(destination__icontains=value)
+            | Q(target__icontains=value)
         )

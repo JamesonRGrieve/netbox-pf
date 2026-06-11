@@ -22,4 +22,13 @@ urlpatterns = [
     path("firewall-rules/<int:pk>/delete/", views.FirewallRuleDeleteView.as_view(), name="firewallrule_delete"),
     path("firewall-rules/<int:pk>/changelog/", ObjectChangeLogView.as_view(), name="firewallrule_changelog", kwargs={"model": models.FirewallRule}),
     path("firewall-rules/<int:pk>/journal/", ObjectJournalView.as_view(), name="firewallrule_journal", kwargs={"model": models.FirewallRule}),
+    # NAT rules
+    path("nat-rules/", views.NATRuleListView.as_view(), name="natrule_list"),
+    path("nat-rules/add/", views.NATRuleEditView.as_view(), name="natrule_add"),
+    path("nat-rules/delete/", views.NATRuleBulkDeleteView.as_view(), name="natrule_bulk_delete"),
+    path("nat-rules/<int:pk>/", views.NATRuleView.as_view(), name="natrule"),
+    path("nat-rules/<int:pk>/edit/", views.NATRuleEditView.as_view(), name="natrule_edit"),
+    path("nat-rules/<int:pk>/delete/", views.NATRuleDeleteView.as_view(), name="natrule_delete"),
+    path("nat-rules/<int:pk>/changelog/", ObjectChangeLogView.as_view(), name="natrule_changelog", kwargs={"model": models.NATRule}),
+    path("nat-rules/<int:pk>/journal/", ObjectJournalView.as_view(), name="natrule_journal", kwargs={"model": models.NATRule}),
 ]

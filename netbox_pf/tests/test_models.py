@@ -5,8 +5,10 @@ from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from utilities.testing import create_test_device
-from netbox_pf.choices import AliasTypeChoices, EndpointTypeChoices, FirewallActionChoices
-from netbox_pf.models import Alias, FirewallRule
+from netbox_pf.choices import (
+    AliasTypeChoices, EndpointTypeChoices, FirewallActionChoices, NATTypeChoices,
+)
+from netbox_pf.models import Alias, FirewallRule, NATRule
 
 
 class AliasModelTest(TestCase):
@@ -71,3 +73,26 @@ class FirewallRuleModelTest(TestCase):
         self.assertEqual(r2.uuid, "b1e2c3d4-0000-1111-2222-333344445555")
         self.assertEqual(r2.tagged, "trusted")
         self.assertEqual(r2.os, "Linux")
+
+
+class NATRuleModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.device = create_test_device("nat1")
+
+    def test_create_str_url_color(self):
+        n = NATRule.objects.create(
+            device=self.device, nat_type=NATTypeChoices.PORT_FORWARD, sequence=0,
+            interface="wan", target="192.0.2.10", local_port="443",
+        )
+        self.assertEqual(str(n), f"{self.device}: port_forward 0000")
+        self.assertIn("/plugins/pf/nat-rules/", n.get_absolute_url())
+        self.assertEqual(n.get_nat_type_color(), "blue")
+
+    def test_unique_type_sequence_per_device(self):
+        NATRule.objects.create(device=self.device, nat_type=NATTypeChoices.OUTBOUND, sequence=0)
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            NATRule.objects.create(device=self.device, nat_type=NATTypeChoices.OUTBOUND, sequence=0)
+        # same sequence under a different nat_type is allowed
+        other = NATRule.objects.create(device=self.device, nat_type=NATTypeChoices.PORT_FORWARD, sequence=0)
+        self.assertEqual(other.sequence, 0)

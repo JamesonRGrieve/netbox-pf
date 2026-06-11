@@ -6,7 +6,7 @@ from django.urls import reverse
 from netbox.models import NetBoxModel
 from .choices import (
     AliasTypeChoices, DirectionChoices, EndpointTypeChoices,
-    FirewallActionChoices, IPProtocolChoices,
+    FirewallActionChoices, IPProtocolChoices, NATTypeChoices,
 )
 
 
@@ -128,3 +128,61 @@ class FirewallRule(NetBoxModel):
 
     def get_action_color(self):
         return FirewallActionChoices.colors.get(self.action)
+
+
+class NATRule(NetBoxModel):
+    """A pf NAT rule — port-forward (DNAT), outbound (SNAT), or 1:1 (binat). A single
+    polymorphic model over all three pfSense/OPNsense NAT tables; every field is a real
+    column and ``advanced`` (JSON) holds the long-tail, so a NAT entry round-trips losslessly.
+    """
+    device = models.ForeignKey(
+        "dcim.Device", on_delete=models.CASCADE, related_name="pf_nat_rules"
+    )
+    nat_type = models.CharField(max_length=16, choices=NATTypeChoices)
+    sequence = models.PositiveIntegerField(
+        validators=[MinValueValidator(0)], help_text="Order within the device's NAT table of this type."
+    )
+    disabled = models.BooleanField(default=False)
+    interface = models.CharField(max_length=128, blank=True, help_text="pf interface (raw).")
+    ipprotocol = models.CharField(max_length=8, blank=True, help_text="inet/inet6 (port-forward).")
+    protocol = models.CharField(max_length=32, blank=True, help_text="tcp/udp/…; blank = any.")
+
+    # Match (original packet)
+    source = models.CharField(max_length=255, blank=True)
+    source_port = models.CharField(max_length=128, blank=True)
+    destination = models.CharField(max_length=255, blank=True)
+    destination_port = models.CharField(max_length=128, blank=True)
+
+    # Translation
+    target = models.CharField(max_length=255, blank=True, help_text="Translation/redirect target (NAT IP/subnet).")
+    local_port = models.CharField(max_length=128, blank=True, help_text="Port-forward redirect (internal) port.")
+    target_subnet = models.CharField(max_length=64, blank=True, help_text="Outbound translation subnet bits.")
+    external = models.CharField(max_length=255, blank=True, help_text="1:1 external address.")
+
+    # Options
+    nat_port = models.CharField(max_length=128, blank=True, help_text="Outbound static NAT port.")
+    static_nat_port = models.BooleanField(default=False)
+    nonat = models.BooleanField(default=False, help_text="Outbound: do-not-NAT (exclusion) rule.")
+    nordr = models.BooleanField(default=False, help_text="Port-forward: no redirect (negate).")
+    nosync = models.BooleanField(default=False, help_text="Do not sync to CARP peer.")
+    natreflection = models.CharField(max_length=32, blank=True)
+    poolopts = models.CharField(max_length=64, blank=True, help_text="Outbound pool option.")
+    associated_rule_id = models.CharField(max_length=64, blank=True, help_text="Linked firewall rule (port-forward).")
+    description = models.CharField(max_length=255, blank=True)
+    advanced = models.JSONField(
+        default=dict, blank=True, help_text="Lossless catch-all (source_hash_key, natport ranges, …)."
+    )
+
+    class Meta:
+        ordering = ["device", "nat_type", "sequence"]
+        unique_together = [["device", "nat_type", "sequence"]]
+        verbose_name = "NAT Rule"
+
+    def __str__(self):
+        return f"{self.device}: {self.nat_type} {self.sequence:04d}"
+
+    def get_absolute_url(self):
+        return reverse("plugins:netbox_pf:natrule", args=[self.pk])
+
+    def get_nat_type_color(self):
+        return NATTypeChoices.colors.get(self.nat_type)

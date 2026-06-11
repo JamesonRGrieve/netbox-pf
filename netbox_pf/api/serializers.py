@@ -2,7 +2,7 @@
 from dcim.api.serializers import DeviceSerializer
 from netbox.api.serializers import NetBoxModelSerializer
 from rest_framework import serializers
-from ..models import Alias, FirewallRule
+from ..models import Alias, FirewallRule, NATRule
 
 
 class AliasSerializer(NetBoxModelSerializer):
@@ -36,3 +36,20 @@ class FirewallRuleSerializer(NetBoxModelSerializer):
             "tags", "custom_fields", "created", "last_updated",
         ]
         brief_fields = ["id", "url", "display", "device", "sequence", "action"]
+
+
+class NATRuleSerializer(NetBoxModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name="plugins-api:netbox_pf-api:natrule-detail")
+    device = DeviceSerializer(nested=True)
+
+    class Meta:
+        model = NATRule
+        fields = [
+            "id", "url", "display", "device", "nat_type", "sequence", "disabled",
+            "interface", "ipprotocol", "protocol", "source", "source_port",
+            "destination", "destination_port", "target", "local_port", "target_subnet",
+            "external", "nat_port", "static_nat_port", "nonat", "nordr", "nosync",
+            "natreflection", "poolopts", "associated_rule_id", "description", "advanced",
+            "tags", "custom_fields", "created", "last_updated",
+        ]
+        brief_fields = ["id", "url", "display", "device", "nat_type", "sequence"]

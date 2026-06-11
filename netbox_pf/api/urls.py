@@ -7,5 +7,6 @@ app_name = "netbox_pf"
 router = NetBoxRouter()
 router.register("aliases", views.AliasViewSet)
 router.register("firewall-rules", views.FirewallRuleViewSet)
+router.register("nat-rules", views.NATRuleViewSet)
 
 urlpatterns = router.urls

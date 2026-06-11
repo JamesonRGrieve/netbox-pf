@@ -6,6 +6,11 @@ _rules = PluginMenuItem(
     link_text="Firewall Rules",
     buttons=[PluginMenuButton("plugins:netbox_pf:firewallrule_add", "Add", "mdi mdi-plus-thick")],
 )
+_nat = PluginMenuItem(
+    link="plugins:netbox_pf:natrule_list",
+    link_text="NAT Rules",
+    buttons=[PluginMenuButton("plugins:netbox_pf:natrule_add", "Add", "mdi mdi-plus-thick")],
+)
 _aliases = PluginMenuItem(
     link="plugins:netbox_pf:alias_list",
     link_text="Aliases",
@@ -14,6 +19,6 @@ _aliases = PluginMenuItem(
 
 menu = PluginMenu(
     label="Firewall (pf)",
-    groups=(("pf", (_rules, _aliases)),),
+    groups=(("pf", (_rules, _nat, _aliases)),),
     icon_class="mdi mdi-firewall",
 )

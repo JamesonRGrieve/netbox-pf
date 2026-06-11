@@ -40,6 +40,18 @@ class EndpointTypeChoices(ChoiceSet):
     ]
 
 
+class NATTypeChoices(ChoiceSet):
+    """pf NAT rule kind."""
+    PORT_FORWARD = "port_forward"
+    OUTBOUND = "outbound"
+    ONE_TO_ONE = "one_to_one"
+    CHOICES = [
+        (PORT_FORWARD, "Port forward", "blue"),
+        (OUTBOUND, "Outbound", "purple"),
+        (ONE_TO_ONE, "1:1", "cyan"),
+    ]
+
+
 class AliasTypeChoices(ChoiceSet):
     """OPNsense/pfSense alias dialects (config.xml ``<aliases><alias><type>`` tokens)."""
     HOST = "host"

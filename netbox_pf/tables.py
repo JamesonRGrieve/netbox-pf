@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import django_tables2 as tables
 from netbox.tables import NetBoxTable, columns
-from .models import Alias, FirewallRule
+from .models import Alias, FirewallRule, NATRule
 
 
 class AliasTable(NetBoxTable):
@@ -36,4 +36,25 @@ class FirewallRuleTable(NetBoxTable):
         default_columns = (
             "device", "sequence", "action", "interface", "protocol", "source",
             "destination", "destination_port", "description",
+        )
+
+
+class NATRuleTable(NetBoxTable):
+    device = tables.Column(linkify=True)
+    nat_type = columns.ChoiceFieldColumn()
+    tags = columns.TagColumn(url_name="plugins:netbox_pf:natrule_list")
+
+    class Meta(NetBoxTable.Meta):
+        model = NATRule
+        fields = (
+            "pk", "id", "device", "nat_type", "sequence", "disabled", "interface",
+            "ipprotocol", "protocol", "source", "source_port", "destination",
+            "destination_port", "target", "local_port", "target_subnet", "external",
+            "nat_port", "static_nat_port", "nonat", "nordr", "nosync", "natreflection",
+            "poolopts", "associated_rule_id", "description", "advanced", "tags",
+            "created", "last_updated",
+        )
+        default_columns = (
+            "device", "nat_type", "sequence", "interface", "protocol", "source",
+            "destination", "destination_port", "target", "local_port", "description",
         )
