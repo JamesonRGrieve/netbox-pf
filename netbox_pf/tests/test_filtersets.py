@@ -47,8 +47,14 @@ class FirewallRuleFilterSetTest(TestCase):
     def test_action(self):
         self.assertEqual(FirewallRuleFilterSet({"action": [FirewallActionChoices.PASS]}, self.queryset).qs.count(), 2)
 
-    def test_device(self):
-        self.assertEqual(FirewallRuleFilterSet({"device": [self.device.pk]}, self.queryset).qs.count(), 3)
+    def test_device_id(self):
+        # the bug: ?device_id was ignored and returned ALL rules; this asserts it filters
+        self.assertEqual(FirewallRuleFilterSet({"device_id": [self.device.pk]}, self.queryset).qs.count(), 3)
+        self.assertEqual(FirewallRuleFilterSet({"device_id": [self.device.pk + 9999]}, self.queryset).qs.count(), 0)
+
+    def test_device_name(self):
+        self.assertEqual(FirewallRuleFilterSet({"device": [self.device.name]}, self.queryset).qs.count(), 3)
+        self.assertEqual(FirewallRuleFilterSet({"device": ["nonexistent-device"]}, self.queryset).qs.count(), 0)
 
     def test_log_and_source_type(self):
         self.assertEqual(FirewallRuleFilterSet({"log": True}, self.queryset).qs.count(), 1)

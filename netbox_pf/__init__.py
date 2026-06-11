@@ -10,7 +10,7 @@ long-tail pf options are preserved verbatim.
 """
 from netbox.plugins import PluginConfig
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 class NetBoxPFConfig(PluginConfig):

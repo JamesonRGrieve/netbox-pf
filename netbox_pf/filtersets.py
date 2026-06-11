@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import django_filters
+from dcim.models import Device
 from django.db.models import Q
 from netbox.filtersets import NetBoxModelFilterSet
 from .models import Alias, FirewallRule
@@ -16,13 +18,30 @@ class AliasFilterSet(NetBoxModelFilterSet):
 
 
 class FirewallRuleFilterSet(NetBoxModelFilterSet):
+    # Explicit FK filters: django-filter does NOT derive `<fk>_id` from a bare FK in
+    # Meta.fields, so `?device_id=` was silently ignored (returned all rules). NetBox
+    # convention is `<fk>_id` (by PK) + `<fk>` (by natural key).
+    device_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="device", queryset=Device.objects.all(), label="Device (ID)",
+    )
+    device = django_filters.ModelMultipleChoiceFilter(
+        field_name="device__name", to_field_name="name", queryset=Device.objects.all(),
+        label="Device (name)",
+    )
+    source_alias_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="source_alias", queryset=Alias.objects.all(), label="Source alias (ID)",
+    )
+    destination_alias_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="destination_alias", queryset=Alias.objects.all(), label="Destination alias (ID)",
+    )
+
     class Meta:
         model = FirewallRule
         fields = [
-            "id", "device", "sequence", "action", "disabled", "quick", "interface",
+            "id", "sequence", "action", "disabled", "quick", "interface",
             "floating", "direction", "ipprotocol", "protocol", "source_type", "source",
-            "source_alias", "destination_type", "destination", "destination_alias",
-            "gateway", "log", "tag", "tagged", "os", "tracker", "uuid",
+            "destination_type", "destination", "gateway", "log", "tag", "tagged", "os",
+            "tracker", "uuid",
         ]
 
     def search(self, queryset, name, value):
