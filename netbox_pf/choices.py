@@ -72,3 +72,18 @@ class AliasTypeChoices(ChoiceSet):
         (GEOIP, "GeoIP"), (MAC, "MAC"), (ASN, "BGP ASN"),
         (DYNIPV6HOST, "Dynamic IPv6 host"), (EXTERNAL, "External"), (INTERNAL, "Internal"),
     ]
+
+
+class GatewayTriggerChoices(ChoiceSet):
+    """When a gateway-group member is considered down (pf gateway-group trigger level)."""
+
+    DOWN = "down"
+    DOWNLOSS = "downloss"
+    DOWNLATENCY = "downlatency"
+    DOWNLOSSLATENCY = "downlosslatency"
+    CHOICES = [
+        (DOWN, "Member down"),
+        (DOWNLOSS, "Packet loss"),
+        (DOWNLATENCY, "High latency"),
+        (DOWNLOSSLATENCY, "Packet loss or high latency"),
+    ]

@@ -76,3 +76,78 @@ class NATRuleDeleteView(generic.ObjectDeleteView):
 class NATRuleBulkDeleteView(generic.BulkDeleteView):
     queryset = models.NATRule.objects.all()
     table = tables.NATRuleTable
+
+
+class GatewayView(generic.ObjectView):
+    queryset = models.Gateway.objects.all()
+
+
+class GatewayListView(generic.ObjectListView):
+    queryset = models.Gateway.objects.all()
+    table = tables.GatewayTable
+    filterset = filtersets.GatewayFilterSet
+    filterset_form = forms.GatewayFilterForm
+
+
+class GatewayEditView(generic.ObjectEditView):
+    queryset = models.Gateway.objects.all()
+    form = forms.GatewayForm
+
+
+class GatewayDeleteView(generic.ObjectDeleteView):
+    queryset = models.Gateway.objects.all()
+
+
+class GatewayBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.Gateway.objects.all()
+    table = tables.GatewayTable
+
+
+class GatewayGroupView(generic.ObjectView):
+    queryset = models.GatewayGroup.objects.all()
+
+
+class GatewayGroupListView(generic.ObjectListView):
+    queryset = models.GatewayGroup.objects.all()
+    table = tables.GatewayGroupTable
+    filterset = filtersets.GatewayGroupFilterSet
+    filterset_form = forms.GatewayGroupFilterForm
+
+
+class GatewayGroupEditView(generic.ObjectEditView):
+    queryset = models.GatewayGroup.objects.all()
+    form = forms.GatewayGroupForm
+
+
+class GatewayGroupDeleteView(generic.ObjectDeleteView):
+    queryset = models.GatewayGroup.objects.all()
+
+
+class GatewayGroupBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.GatewayGroup.objects.all()
+    table = tables.GatewayGroupTable
+
+
+class GatewayGroupMemberView(generic.ObjectView):
+    queryset = models.GatewayGroupMember.objects.all()
+
+
+class GatewayGroupMemberListView(generic.ObjectListView):
+    queryset = models.GatewayGroupMember.objects.all()
+    table = tables.GatewayGroupMemberTable
+    filterset = filtersets.GatewayGroupMemberFilterSet
+    filterset_form = forms.GatewayGroupMemberFilterForm
+
+
+class GatewayGroupMemberEditView(generic.ObjectEditView):
+    queryset = models.GatewayGroupMember.objects.all()
+    form = forms.GatewayGroupMemberForm
+
+
+class GatewayGroupMemberDeleteView(generic.ObjectDeleteView):
+    queryset = models.GatewayGroupMember.objects.all()
+
+
+class GatewayGroupMemberBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.GatewayGroupMember.objects.all()
+    table = tables.GatewayGroupMemberTable

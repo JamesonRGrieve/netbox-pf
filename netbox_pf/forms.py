@@ -7,9 +7,10 @@ from utilities.forms.fields import (
 )
 from utilities.forms.rendering import FieldSet
 from .choices import (
-    AliasTypeChoices, DirectionChoices, FirewallActionChoices, IPProtocolChoices, NATTypeChoices,
+    AliasTypeChoices, DirectionChoices, FirewallActionChoices, GatewayTriggerChoices,
+    IPProtocolChoices, NATTypeChoices,
 )
-from .models import Alias, FirewallRule, NATRule
+from .models import Alias, FirewallRule, Gateway, GatewayGroup, GatewayGroupMember, NATRule
 
 
 class AliasForm(NetBoxModelForm):
@@ -91,3 +92,59 @@ class FirewallRuleFilterForm(NetBoxModelFilterSetForm):
     ipprotocol = forms.MultipleChoiceField(choices=IPProtocolChoices, required=False)
     disabled = forms.NullBooleanField(required=False)
     tag = TagFilterField(FirewallRule)
+
+
+class GatewayForm(NetBoxModelForm):
+    device = DynamicModelChoiceField(queryset=Device.objects.all())
+
+    fieldsets = (
+        FieldSet("device", "name", "interface", "ipprotocol", "address", "monitor_ip", name="Gateway"),
+        FieldSet("weight", "priority", "far_gateway", "default_gateway", "disabled", name="Options"),
+        FieldSet("description", "tags", name="Misc"),
+    )
+
+    class Meta:
+        model = Gateway
+        fields = [
+            "device", "name", "interface", "ipprotocol", "address", "monitor_ip", "weight",
+            "priority", "far_gateway", "default_gateway", "disabled", "description", "tags",
+        ]
+
+
+class GatewayGroupForm(NetBoxModelForm):
+    device = DynamicModelChoiceField(queryset=Device.objects.all())
+
+    class Meta:
+        model = GatewayGroup
+        fields = ["device", "name", "trigger", "description", "tags"]
+
+
+class GatewayGroupMemberForm(NetBoxModelForm):
+    group = DynamicModelChoiceField(queryset=GatewayGroup.objects.all())
+    gateway = DynamicModelChoiceField(queryset=Gateway.objects.all())
+
+    class Meta:
+        model = GatewayGroupMember
+        fields = ["group", "gateway", "tier", "tags"]
+
+
+class GatewayFilterForm(NetBoxModelFilterSetForm):
+    model = Gateway
+    device_id = DynamicModelMultipleChoiceField(queryset=Device.objects.all(), required=False, label="Device")
+    ipprotocol = forms.MultipleChoiceField(choices=IPProtocolChoices, required=False)
+    disabled = forms.NullBooleanField(required=False)
+    tag = TagFilterField(Gateway)
+
+
+class GatewayGroupFilterForm(NetBoxModelFilterSetForm):
+    model = GatewayGroup
+    device_id = DynamicModelMultipleChoiceField(queryset=Device.objects.all(), required=False, label="Device")
+    trigger = forms.MultipleChoiceField(choices=GatewayTriggerChoices, required=False)
+    tag = TagFilterField(GatewayGroup)
+
+
+class GatewayGroupMemberFilterForm(NetBoxModelFilterSetForm):
+    model = GatewayGroupMember
+    group_id = DynamicModelMultipleChoiceField(queryset=GatewayGroup.objects.all(), required=False, label="Group")
+    gateway_id = DynamicModelMultipleChoiceField(queryset=Gateway.objects.all(), required=False, label="Gateway")
+    tag = TagFilterField(GatewayGroupMember)

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import django_tables2 as tables
 from netbox.tables import NetBoxTable, columns
-from .models import Alias, FirewallRule, NATRule
+from .models import Alias, FirewallRule, Gateway, GatewayGroup, GatewayGroupMember, NATRule
 
 
 class AliasTable(NetBoxTable):
@@ -58,3 +58,40 @@ class NATRuleTable(NetBoxTable):
             "device", "nat_type", "sequence", "interface", "protocol", "source",
             "destination", "destination_port", "target", "local_port", "description",
         )
+
+
+class GatewayTable(NetBoxTable):
+    device = tables.Column(linkify=True)
+    name = tables.Column(linkify=True)
+    tags = columns.TagColumn(url_name="plugins:netbox_pf:gateway_list")
+
+    class Meta(NetBoxTable.Meta):
+        model = Gateway
+        fields = (
+            "pk", "id", "device", "name", "interface", "address", "ipprotocol", "monitor_ip",
+            "weight", "priority", "far_gateway", "default_gateway", "disabled", "description",
+            "tags", "created", "last_updated",
+        )
+        default_columns = ("device", "name", "interface", "address", "priority", "default_gateway")
+
+
+class GatewayGroupTable(NetBoxTable):
+    device = tables.Column(linkify=True)
+    name = tables.Column(linkify=True)
+    tags = columns.TagColumn(url_name="plugins:netbox_pf:gatewaygroup_list")
+
+    class Meta(NetBoxTable.Meta):
+        model = GatewayGroup
+        fields = ("pk", "id", "device", "name", "trigger", "description", "tags", "created", "last_updated")
+        default_columns = ("device", "name", "trigger")
+
+
+class GatewayGroupMemberTable(NetBoxTable):
+    group = tables.Column(linkify=True)
+    gateway = tables.Column(linkify=True)
+    tags = columns.TagColumn(url_name="plugins:netbox_pf:gatewaygroupmember_list")
+
+    class Meta(NetBoxTable.Meta):
+        model = GatewayGroupMember
+        fields = ("pk", "id", "group", "gateway", "tier", "tags", "created", "last_updated")
+        default_columns = ("group", "gateway", "tier")

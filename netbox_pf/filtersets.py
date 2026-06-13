@@ -3,7 +3,7 @@ import django_filters
 from dcim.models import Device
 from django.db.models import Q
 from netbox.filtersets import NetBoxModelFilterSet
-from .models import Alias, FirewallRule, NATRule
+from .models import Alias, FirewallRule, Gateway, GatewayGroup, GatewayGroupMember, NATRule
 
 
 class AliasFilterSet(NetBoxModelFilterSet):
@@ -74,3 +74,53 @@ class NATRuleFilterSet(NetBoxModelFilterSet):
             | Q(source__icontains=value) | Q(destination__icontains=value)
             | Q(target__icontains=value)
         )
+
+
+class GatewayFilterSet(NetBoxModelFilterSet):
+    device_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="device", queryset=Device.objects.all(), label="Device (ID)"
+    )
+    device = django_filters.ModelMultipleChoiceFilter(
+        field_name="device__name", to_field_name="name", queryset=Device.objects.all(), label="Device (name)"
+    )
+
+    class Meta:
+        model = Gateway
+        fields = ["id", "name", "interface", "address", "ipprotocol", "priority", "default_gateway", "disabled"]
+
+    def search(self, queryset, name, value):
+        return queryset.filter(
+            Q(name__icontains=value) | Q(interface__icontains=value) | Q(description__icontains=value)
+        )
+
+
+class GatewayGroupFilterSet(NetBoxModelFilterSet):
+    device_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="device", queryset=Device.objects.all(), label="Device (ID)"
+    )
+    device = django_filters.ModelMultipleChoiceFilter(
+        field_name="device__name", to_field_name="name", queryset=Device.objects.all(), label="Device (name)"
+    )
+
+    class Meta:
+        model = GatewayGroup
+        fields = ["id", "name", "trigger"]
+
+    def search(self, queryset, name, value):
+        return queryset.filter(Q(name__icontains=value) | Q(description__icontains=value))
+
+
+class GatewayGroupMemberFilterSet(NetBoxModelFilterSet):
+    group_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="group", queryset=GatewayGroup.objects.all(), label="Group (ID)"
+    )
+    gateway_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="gateway", queryset=Gateway.objects.all(), label="Gateway (ID)"
+    )
+
+    class Meta:
+        model = GatewayGroupMember
+        fields = ["id", "tier"]
+
+    def search(self, queryset, name, value):
+        return queryset.filter(Q(group__name__icontains=value) | Q(gateway__name__icontains=value))

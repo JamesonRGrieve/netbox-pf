@@ -6,7 +6,7 @@ from django.urls import reverse
 from netbox.models import NetBoxModel
 from .choices import (
     AliasTypeChoices, DirectionChoices, EndpointTypeChoices,
-    FirewallActionChoices, IPProtocolChoices, NATTypeChoices,
+    FirewallActionChoices, GatewayTriggerChoices, IPProtocolChoices, NATTypeChoices,
 )
 
 
@@ -186,3 +186,86 @@ class NATRule(NetBoxModel):
 
     def get_nat_type_color(self):
         return NATTypeChoices.colors.get(self.nat_type)
+
+
+class Gateway(NetBoxModel):
+    """An OPNsense/pfSense gateway (System > Gateways): a named next-hop on an interface, with
+    optional health monitoring and multi-WAN weighting/priority. netbox-routing models static
+    routes but has no gateway concept; this is the OPNsense gateway surface, lossless."""
+
+    device = models.ForeignKey("dcim.Device", on_delete=models.CASCADE, related_name="pf_gateways")
+    name = models.CharField(max_length=64)
+    interface = models.CharField(max_length=64, help_text="pf interface the gateway is reached on.")
+    address = models.GenericIPAddressField(
+        null=True, blank=True, help_text="Gateway IP (blank = dynamic / interface-assigned)."
+    )
+    ipprotocol = models.CharField(
+        max_length=8, choices=IPProtocolChoices, default=IPProtocolChoices.INET
+    )
+    monitor_ip = models.GenericIPAddressField(
+        null=True, blank=True, help_text="Address to probe for health (blank = the gateway IP)."
+    )
+    weight = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1)])
+    priority = models.PositiveSmallIntegerField(
+        default=255, help_text="pf gateway priority; lower is preferred."
+    )
+    far_gateway = models.BooleanField(default=False, help_text="Gateway is outside the interface subnet.")
+    default_gateway = models.BooleanField(default=False, help_text="Use as the system default gateway.")
+    disabled = models.BooleanField(default=False)
+    description = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        ordering = ["device", "name"]
+        verbose_name = "Gateway"
+        unique_together = [["device", "name"]]
+
+    def __str__(self):
+        return f"{self.device}: {self.name}"
+
+    def get_absolute_url(self):
+        return reverse("plugins:netbox_pf:gateway", args=[self.pk])
+
+
+class GatewayGroup(NetBoxModel):
+    """A gateway group for multi-WAN failover / load-balancing; members are placed at tiers."""
+
+    device = models.ForeignKey(
+        "dcim.Device", on_delete=models.CASCADE, related_name="pf_gateway_groups"
+    )
+    name = models.CharField(max_length=64)
+    trigger = models.CharField(
+        max_length=20, choices=GatewayTriggerChoices, default=GatewayTriggerChoices.DOWN
+    )
+    description = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        ordering = ["device", "name"]
+        verbose_name = "Gateway Group"
+        unique_together = [["device", "name"]]
+
+    def __str__(self):
+        return f"{self.device}: {self.name}"
+
+    def get_absolute_url(self):
+        return reverse("plugins:netbox_pf:gatewaygroup", args=[self.pk])
+
+
+class GatewayGroupMember(NetBoxModel):
+    """Membership of a Gateway in a GatewayGroup at a failover tier (1 = primary)."""
+
+    group = models.ForeignKey(GatewayGroup, on_delete=models.CASCADE, related_name="members")
+    gateway = models.ForeignKey(Gateway, on_delete=models.PROTECT, related_name="group_memberships")
+    tier = models.PositiveSmallIntegerField(
+        default=1, validators=[MinValueValidator(1)], help_text="Failover tier; lower is preferred."
+    )
+
+    class Meta:
+        ordering = ["group", "tier"]
+        verbose_name = "Gateway Group Member"
+        unique_together = [["group", "gateway"]]
+
+    def __str__(self):
+        return f"{self.group.name}: {self.gateway.name} (tier {self.tier})"
+
+    def get_absolute_url(self):
+        return reverse("plugins:netbox_pf:gatewaygroup", args=[self.group.pk])

@@ -2,7 +2,7 @@
 from dcim.api.serializers import DeviceSerializer
 from netbox.api.serializers import NetBoxModelSerializer
 from rest_framework import serializers
-from ..models import Alias, FirewallRule, NATRule
+from ..models import Alias, FirewallRule, Gateway, GatewayGroup, GatewayGroupMember, NATRule
 
 
 class AliasSerializer(NetBoxModelSerializer):
@@ -53,3 +53,44 @@ class NATRuleSerializer(NetBoxModelSerializer):
             "tags", "custom_fields", "created", "last_updated",
         ]
         brief_fields = ["id", "url", "display", "device", "nat_type", "sequence"]
+
+
+class GatewaySerializer(NetBoxModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name="plugins-api:netbox_pf-api:gateway-detail")
+    device = DeviceSerializer(nested=True)
+
+    class Meta:
+        model = Gateway
+        fields = [
+            "id", "url", "display", "device", "name", "interface", "address", "ipprotocol",
+            "monitor_ip", "weight", "priority", "far_gateway", "default_gateway", "disabled",
+            "description", "tags", "custom_fields", "created", "last_updated",
+        ]
+        brief_fields = ["id", "url", "display", "device", "name"]
+
+
+class GatewayGroupSerializer(NetBoxModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name="plugins-api:netbox_pf-api:gatewaygroup-detail")
+    device = DeviceSerializer(nested=True)
+
+    class Meta:
+        model = GatewayGroup
+        fields = [
+            "id", "url", "display", "device", "name", "trigger", "description",
+            "tags", "custom_fields", "created", "last_updated",
+        ]
+        brief_fields = ["id", "url", "display", "device", "name"]
+
+
+class GatewayGroupMemberSerializer(NetBoxModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name="plugins-api:netbox_pf-api:gatewaygroupmember-detail")
+    group = GatewayGroupSerializer(nested=True)
+    gateway = GatewaySerializer(nested=True)
+
+    class Meta:
+        model = GatewayGroupMember
+        fields = [
+            "id", "url", "display", "group", "gateway", "tier",
+            "tags", "custom_fields", "created", "last_updated",
+        ]
+        brief_fields = ["id", "url", "display", "group", "gateway", "tier"]
